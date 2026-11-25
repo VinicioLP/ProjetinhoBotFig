@@ -117,6 +117,7 @@ test('plogme codifica o desenho como prévia de link sem anexo de imagem', async
   const message = encoded.extendedTextMessage;
   assert.equal(encoded.imageMessage, null);
   assert.match(message.text, /Rabisca/);
+  assert.match(message.text, /\*🐾 Tema: Animais\*/u);
   assert.match(message.matchedText, /^https:\/\//);
   assert.equal(message.title, 'Qual é o desenho?');
   assert.equal(Buffer.from(message.jpegThumbnail).readUInt16BE(0), 0xffd8);
@@ -145,4 +146,17 @@ test('!fim encerra a partida para quem iniciou e publica o placar', async () => 
   assert.match(sent.at(-1).text, /Total do grupo/);
   assert.equal(cancelled, 1);
   assert.equal(await go('gato'), false);
+});
+
+test('tema Transportes usa ilustrações OpenMoji e credita a fonte no cartão', async () => {
+  const sent = [];
+  const game = createRabisca({ schedule: () => 1, cancel: () => {} });
+  await game.handle({
+    group: 'teste@g.us', player: '1@s.whatsapp.net', text: '!rabisca transportes',
+    send: async (payload) => sent.push(payload),
+  });
+  assert.match(sent[0].text, /\*🚗 Tema: Transportes\*/u);
+  assert.match(sent[0].linkPreview.description, /OpenMoji.*CC BY-SA 4\.0/);
+  assert.equal(sent[0].linkPreview.jpegThumbnail.readUInt16BE(0), 0xffd8);
+  assert.equal(sent[0].image, undefined);
 });

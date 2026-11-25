@@ -3,7 +3,13 @@ const { ffmpeg } = require('./media.cjs');
 const previewSize = { width: 640, height: 360 };
 const creditsUrl = 'https://github.com/VinicioLP/ProjetinhoBotFig#rabisca';
 
-const themes = ['animais', 'comidas', 'objetos'];
+const themes = new Map([
+  ['animais', '🐾 Tema: Animais'],
+  ['comidas', '🍴 Tema: Comidas'],
+  ['objetos', '🧩 Tema: Objetos'],
+  ['transportes', '🚗 Tema: Transportes'],
+]);
+const deckLocal = [...require('../data/rabisca.json'), ...require('../data/rabisca-openmoji.json')];
 const controls = new Set(['rabisca', 'dica', 'pular', 'placar', 'chute', 'fim']);
 const aliases = {
   cachorro: ['cão'],
@@ -17,8 +23,18 @@ function normalizeGuess(text) {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-async function renderDrawing({ drawing }) {
+async function renderDrawing({ drawing, png }) {
   const { width: canvasWidth, height: canvasHeight } = previewSize;
+  if (png) {
+    return ffmpeg([
+      '-f', 'lavfi', '-i', `color=white:s=${canvasWidth}x${canvasHeight}`,
+      '-f', 'image2pipe', '-c:v', 'png', '-i', 'pipe:0',
+      '-filter_complex_threads', '1',
+      '-filter_complex', '[1:v]scale=294:294:flags=lanczos[icon];[0:v][icon]overlay=(W-w)/2:(H-h)/2',
+      '-frames:v', '1', '-c:v', 'mjpeg', '-q:v', '3', '-f', 'image2pipe', 'pipe:1',
+    ], Buffer.from(png, 'base64'));
+  }
+
   const pixels = Buffer.alloc(canvasWidth * canvasHeight * 3, 255);
   function dot(x, y) {
     for (let dy = -3; dy <= 3; dy++) {
@@ -74,7 +90,7 @@ function makeDeck(entries, history, random) {
 }
 
 function createRabisca({
-  deck = require('../data/rabisca.json'), random = Math.random,
+  deck = deckLocal, random = Math.random,
   render = renderDrawing, uploadPreview,
   schedule = setTimeout, cancel = clearTimeout, onError = console.error,
 } = {}) {
@@ -115,7 +131,9 @@ function createRabisca({
       const linkPreview = {
         'matched-text': creditsUrl,
         title: 'Qual é o desenho?',
-        description: 'Rabisca • Google Quick, Draw! • CC BY 4.0',
+        description: entry.source === 'openmoji'
+          ? 'Ilustração por OpenMoji • CC BY-SA 4.0'
+          : 'Desenho do Google Quick, Draw! • CC BY 4.0',
         jpegThumbnail: thumbnail,
       };
       if (uploadPreview) {
@@ -127,7 +145,16 @@ function createRabisca({
       }
       if (games.get(group) !== game) return;
       await send({
-        text: `*Rabisca • desenho ${++game.number}*\nTema: ${entry.theme}. Vocês têm 60 segundos.\nMande seu palpite ou use !dica e !pular.\n${creditsUrl}`,
+        text: [
+          `*Rabisca • Rodada ${++game.number}*`,
+          `*${themes.get(entry.theme) ?? '🎨 Tema: Geral'}*`,
+          '',
+          '⏱️ 60 segundos para adivinhar.',
+          '💬 Mande seu palpite no grupo. O primeiro acerto vale 10 pontos.',
+          '',
+          '💡 !dica  |  ⏭️ !pular  |  🏆 !placar',
+          creditsUrl,
+        ].join('\n'),
         linkPreview,
       });
       if (games.get(group) !== game) return;
@@ -172,7 +199,9 @@ function createRabisca({
 
     if (control === 'rabisca') {
       if (game) await reply('Já tem uma partida neste grupo. Mande seu palpite!');
-      else if (arg && arg !== 'geral' && !themes.includes(arg)) await reply('Use !rabisca, !rabisca animais, !rabisca comidas ou !rabisca objetos.');
+      else if (arg && arg !== 'geral' && !themes.has(arg)) {
+        await reply(`Tema inválido. Use !rabisca para misturar tudo ou escolha: ${[...themes.keys()].join(', ')}.`);
+      }
       else {
         const history = histories.get(group) ?? { count: 0, answers: new Map(), drawings: new Map() };
         histories.set(group, history);

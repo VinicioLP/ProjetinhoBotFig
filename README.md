@@ -49,7 +49,7 @@ Responda a uma figurinha com `!salvar surtando`. Depois, mande `!usar surtando` 
 
 ## Rabisca
 
-Mande `!rabisca` em um grupo para jogar com todos os temas ou escolha `!rabisca animais`, `!rabisca comidas` ou `!rabisca objetos`.
+Mande `!rabisca` em um grupo para jogar com todos os temas ou escolha `!rabisca animais`, `!rabisca comidas` `!rabisca objetos` ou `!rabisca transportes`.
 
 - Mande o palpite como mensagem normal ou use `!chute palavra`. O primeiro acerto vale 10 pontos. O bot mostra quem acertou e seu total antes de abrir o próximo desenho.
 - O desenho é enviado como prévia de link na conversa, sem foto em anexo. O link leva ao guia e aos créditos. Cada resposta só entra uma vez por partida, e o bot prioriza palavras e desenhos que o grupo viu há mais tempo.
@@ -58,6 +58,8 @@ Mande `!rabisca` em um grupo para jogar com todos os temas ou escolha `!rabisca 
 - `!placar` mostra a pontuação atual ou a da última partida do grupo. Quem iniciou pode encerrar com `!fim` ou `!rabisca fim`. O placar fica na memória até reiniciar o bot.
 
 Os traços vêm do [Google Quick, Draw! Dataset](https://github.com/googlecreativelab/quickdraw-dataset), com desenhos contribuídos pelos jogadores e disponibilizados por Google, Inc. sob [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). O arquivo `data/rabisca.json` contém um recorte de 332 desenhos de 59 categorias. Os rótulos foram traduzidos para português e os traços são centralizados e renderizados como imagem pelo bot.
+
+O arquivo `data/rabisca-openmoji.json` acrescenta 32 ilustrações em preto e branco do [OpenMoji](https://openmoji.org/), distribuídas sob [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). O bot centraliza e redimensiona as ilustrações para o cartão. Os cartões derivados dessas ilustrações mantêm a mesma licença. [Arquivos de origem](https://github.com/hfg-gmuend/openmoji/tree/5acb7f049c45c57a98449122d470de9f09bb6794/black/618x618).
 
 
 ## Testes
