@@ -138,9 +138,9 @@ async function convertMedia(media, mode) {
       return [{ data: await fs.readFile(output), mimetype: 'video/mp4', filename: 'clipe.mp4' }];
     }
 
-    const cropped = mode === 'figsomquadrada';
+    const cropped = mode === 'figquadrada' || mode === 'figsomquadrada';
     const framing = cropped ? croppedStickerFilter : stickerFilter;
-    const soundSticker = (mode === 'figsom' || cropped) && video;
+    const soundSticker = (mode === 'figsom' || mode === 'figsomquadrada') && video;
     const duration = soundSticker ? soundStickerSeconds : seconds;
     const sticker = await makeSticker(input, video || mime === 'image/gif', framing, duration);
     let audio = null;

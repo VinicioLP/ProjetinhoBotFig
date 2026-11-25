@@ -16,6 +16,7 @@ test('identifica comandos completos e ignora conversa normal', async () => {
   assert.equal(commandFrom(' !FIG '), 'fig');
   assert.equal(commandFrom('!clip'), 'clip');
   assert.equal(commandFrom('!figsomquadrada'), 'figsomquadrada');
+  assert.equal(commandFrom('!figquadrada'), 'figquadrada');
   assert.equal(commandFrom('!figura'), null);
   assert.equal(commandFrom('manda um !fig'), null);
 });
@@ -54,6 +55,11 @@ test('gera figurinha WebP, áudio Opus e vídeo com áudio de um vídeo real', a
   assert.equal(cropped.data.readUIntLE(27, 3) + 1, 512);
   const normalFrame = sticker.data.indexOf('ANMF');
   assert.ok(sticker.data.readUIntLE(normalFrame + 17, 3) + 1 < 512);
+  const [squareSticker, squareAudio] = await convertMedia(input, 'figquadrada');
+  const squareFrame = squareSticker.data.indexOf('ANMF');
+  assert.ok(squareFrame > 0);
+  assert.equal(squareSticker.data.readUIntLE(squareFrame + 17, 3) + 1, 512);
+  assert.equal(squareAudio, undefined);
   const croppedFrame = cropped.data.indexOf('ANMF');
   assert.equal(cropped.data.readUIntLE(croppedFrame + 17, 3) + 1, 512);
   assert.equal(cropped.data.toString('ascii', croppedFrame + 24, croppedFrame + 28), 'VP8 ');

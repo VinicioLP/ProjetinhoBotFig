@@ -22,11 +22,12 @@ Mantenha o terminal aberto. Para parar, use **Ctrl+C**. Se precisar trocar de co
 | `!help` | Lista de comandos e instruções de uso |
 | `!fig` em uma foto | Figurinha estática |
 | `!fig` em um GIF ou vídeo | Figurinha animada sem áudio |
+| `!figquadrada` em foto, GIF ou vídeo | Figurinha sem áudio com recorte central de 512 × 512 px |
 | `!figsom` em um vídeo com áudio | Envio experimental de figurinha sonora |
 | `!figsomquadrada` em um vídeo com áudio | Figurinha sonora com recorte central de 512 × 512 px, sem bordas |
 | `!clip` em um vídeo | Vídeo quadrado em MP4 com o áudio original, quando houver |
 
-Coloque o comando na legenda ou responda à mídia com ele. Para testar de ponta a ponta, envie um vídeo com áudio e a legenda `!figsom` de outra conta, espere a resposta e toque no ícone de som da figurinha no celular. O bot aceita até 16 MB. !figsom e !figsomquadrada usam os primeiros 10 segundos de vídeo e áudio. !fig e !clip usam até 6 segundos.
+Coloque o comando na legenda ou responda à mídia com ele. Para testar de ponta a ponta, envie um vídeo com áudio e a legenda `!figsom` de outra conta, espere a resposta e toque no ícone de som da figurinha no celular. O bot aceita até 16 MB. !figsom e !figsomquadrada usam os primeiros 10 segundos de vídeo e áudio. !fig, !figquadrada e !clip usam até 6 segundos.
 
 ## Testes
 

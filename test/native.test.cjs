@@ -66,7 +66,7 @@ test('!help lista os comandos sem precisar de mídia', async () => {
     send: async (payload) => replies.push(payload),
   });
   assert.equal(replies.length, 1);
-  for (const command of ['!fig', '!figsom', '!figsomquadrada', '!clip', '!help']) {
+  for (const command of ['!fig', '!figquadrada', '!figsom', '!figsomquadrada', '!clip', '!help']) {
     assert.ok(replies[0].text.includes(command + ' '), command);
   }
 });

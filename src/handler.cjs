@@ -1,5 +1,6 @@
 const commands = new Map([
   ['fig', 'Cria uma figurinha de foto, GIF ou vídeo.'],
+  ['figquadrada', 'Recorta o centro de uma foto, GIF ou vídeo para criar uma figurinha quadrada sem som.'],
   ['figsom', 'Cria uma figurinha com o som do vídeo, até 10 segundos.'],
   ['figsomquadrada', 'Recorta o centro do vídeo e cria uma figurinha quadrada com som, até 10 segundos.'],
   ['clip', 'Cria um vídeo quadrado curto com o áudio original.'],
