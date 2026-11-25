@@ -34,6 +34,7 @@ const help = [
   '!dica — Mostra uma dica do desenho atual.',
   '!pular — Troca de desenho.',
   '!placar — Mostra os pontos da partida.',
+  '!fim — Encerra a partida e mostra o placar. Disponível para quem iniciou.',
 ].join('\n');
 
 function parseCommand(body) {

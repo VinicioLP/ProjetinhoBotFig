@@ -3,7 +3,7 @@ const { ffmpeg } = require('./media.cjs');
 const creditsUrl = 'https://github.com/VinicioLP/ProjetinhoBotFig#rabisca';
 
 const themes = ['animais', 'comidas', 'objetos'];
-const controls = new Set(['rabisca', 'dica', 'pular', 'placar', 'chute']);
+const controls = new Set(['rabisca', 'dica', 'pular', 'placar', 'chute', 'fim']);
 const aliases = {
   cachorro: ['cão'],
   'tartaruga marinha': ['tartaruga'],
@@ -17,8 +17,8 @@ function normalizeGuess(text) {
 }
 
 async function renderDrawing({ drawing }) {
-  const canvasWidth = 640;
-  const canvasHeight = 360;
+  const canvasWidth = 512;
+  const canvasHeight = 512;
   const pixels = Buffer.alloc(canvasWidth * canvasHeight * 3, 255);
   function dot(x, y) {
     for (let dy = -3; dy <= 3; dy++) {
@@ -35,7 +35,7 @@ async function renderDrawing({ drawing }) {
   const top = Math.min(...points.map(([, y]) => y));
   const width = Math.max(...points.map(([x]) => x)) - left;
   const height = Math.max(...points.map(([, y]) => y)) - top;
-  const scale = 294 / Math.max(width, height, 1);
+  const scale = 424 / Math.max(width, height, 1);
   function position(x, y) {
     return [(canvasWidth - width * scale) / 2 + (x - left) * scale,
       (canvasHeight - height * scale) / 2 + (y - top) * scale];
@@ -110,20 +110,12 @@ function createRabisca({
     const entry = game.deck.shift();
     if (!entry) return finish(group, game, send, 'Fim de partida. Vocês chegaram ao fim do baralho!');
     try {
-      const thumbnail = await render(entry);
+      const image = await render(entry);
       if (games.get(group) !== game) return;
       await send({
-        text: `*Rabisca • desenho ${++game.number}*\nTema: ${entry.theme}. Vocês têm 60 segundos.\nMande seu palpite ou use !dica e !pular.`,
-        externalAdReply: {
-          title: 'Qual é o desenho?',
-          body: 'Desenho do Google Quick, Draw! • CC BY 4.0',
-          thumbnail,
-          sourceUrl: creditsUrl,
-          mediaType: 1,
-          renderLargerThumbnail: true,
-          showAdAttribution: false,
-        },
-        linkPreview: null,
+        image,
+        mimetype: 'image/jpeg',
+        caption: `*Rabisca • desenho ${++game.number}*\nTema: ${entry.theme}. Vocês têm 60 segundos.\nMande seu palpite ou use !dica e !pular.\nDesenho: Quick, Draw! • ${creditsUrl}`,
       });
       if (games.get(group) !== game) return;
       const count = ++game.history.count;
@@ -158,13 +150,14 @@ function createRabisca({
     if (!controls.has(control) && (trimmed.startsWith('!') || !game?.round)) return false;
     const reply = (message) => send({ text: message });
 
+    if (control === 'fim' || (control === 'rabisca' && arg === 'fim')) {
+      if (!game) await reply('Nenhuma partida em andamento.');
+      else if (game.owner !== player) await reply('Quem iniciou a partida pode encerrá-la.');
+      else await finish(group, game, send, 'Partida encerrada.');
+      return true;
+    }
+
     if (control === 'rabisca') {
-      if (arg === 'fim') {
-        if (!game) await reply('Nenhuma partida em andamento.');
-        else if (game.owner !== player) await reply('Quem iniciou a partida pode encerrá-la.');
-        else await finish(group, game, send, 'Partida encerrada.');
-        return true;
-      }
       if (game) await reply('Já tem uma partida neste grupo. Mande seu palpite!');
       else if (arg && arg !== 'geral' && !themes.includes(arg)) await reply('Use !rabisca, !rabisca animais, !rabisca comidas ou !rabisca objetos.');
       else {

@@ -14,10 +14,10 @@ test('primeiro acerto ganha 10, avança e a rodada sem acerto encerra a partida'
   const go = (text, player = '1@s.whatsapp.net') =>
     game.handle({ group: 'teste@g.us', player, text, send: async payload => sent.push(payload) });
   await go('!rabisca');
-  assert.equal(sent[0].externalAdReply.renderLargerThumbnail, true);
-  assert.deepEqual(sent[0].externalAdReply.thumbnail, Buffer.from('imagem'));
-  assert.doesNotMatch(sent[0].text, /https:\/\//);
-  assert.equal(sent[0].image, undefined);
+  assert.match(sent[0].caption, /Rabisca/);
+  assert.deepEqual(sent[0].image, Buffer.from('imagem'));
+
+
   await Promise.all([go('maca'), go('maçã', '2@s.whatsapp.net')]);
   assert.equal(sent.filter(message => message.text?.includes('+10')).length, 1);
   await go('gato');
@@ -89,18 +89,42 @@ test('evita repetir a resposta na partida e prioriza palavras ainda não vistas 
   assert.match(sent.at(-1).text, /fim do baralho/);
 });
 
-test('plogme codifica o desenho como cartão com miniatura grande', async () => {
+test('plogme codifica o desenho como imagem comum com legenda', async () => {
   const { generateWAMessageContent } = await import('plogme');
   const deck = require('../data/rabisca.json').slice(0, 1);
   const game = createRabisca({ deck, schedule: () => 1, cancel: () => {} });
   let encoded;
   await game.handle({
     group: 'teste@g.us', player: '1@s.whatsapp.net', text: '!rabisca',
-    send: async (payload) => { encoded = await generateWAMessageContent(payload, {}); },
+    send: async (payload) => {
+      encoded = await generateWAMessageContent(payload, {
+        upload: async () => ({ mediaUrl: 'https://example.invalid/image', directPath: '/image' }),
+      });
+    },
   });
-  const card = encoded.extendedTextMessage.contextInfo.externalAdReply;
-  assert.equal(card.renderLargerThumbnail, true);
-  assert.equal(card.showAdAttribution, false);
-  assert.equal(Buffer.from(card.thumbnail).readUInt16BE(0), 0xffd8);
-  assert.equal(encoded.imageMessage, null);
+  assert.equal(encoded.imageMessage.mimetype, 'image/jpeg');
+  assert.match(encoded.imageMessage.caption, /Rabisca/);
+  assert.equal(encoded.extendedTextMessage, null);
+});
+
+test('!fim encerra a partida para quem iniciou e publica o placar', async () => {
+  const sent = [];
+  let cancelled = 0;
+  const game = createRabisca({
+    deck: [{ answer: 'gato', theme: 'animais' }],
+    render: async () => Buffer.from('imagem'),
+    schedule: () => 1, cancel: () => { cancelled++; },
+  });
+  const go = (text, player = '1@s.whatsapp.net') => game.handle({
+    group: 'teste@g.us', player, text, send: async (payload) => sent.push(payload),
+  });
+  await go('!rabisca');
+  await go('!fim', '2@s.whatsapp.net');
+  assert.match(sent.at(-1).text, /Quem iniciou/);
+  assert.equal(cancelled, 0);
+  assert.equal(await go('!fim'), true);
+  assert.match(sent.at(-1).text, /Partida encerrada/);
+  assert.match(sent.at(-1).text, /Total do grupo/);
+  assert.equal(cancelled, 1);
+  assert.equal(await go('gato'), false);
 });
