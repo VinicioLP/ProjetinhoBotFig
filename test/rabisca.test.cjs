@@ -150,7 +150,8 @@ test('!fim encerra a partida para quem iniciou e publica o placar', async () => 
 
 test('tema Transportes usa ilustrações OpenMoji e credita a fonte no cartão', async () => {
   const sent = [];
-  const game = createRabisca({ schedule: () => 1, cancel: () => {} });
+  const deck = require('../data/rabisca-openmoji.json');
+  const game = createRabisca({ deck, schedule: () => 1, cancel: () => {} });
   await game.handle({
     group: 'teste@g.us', player: '1@s.whatsapp.net', text: '!rabisca transportes',
     send: async (payload) => sent.push(payload),
@@ -159,4 +160,32 @@ test('tema Transportes usa ilustrações OpenMoji e credita a fonte no cartão',
   assert.match(sent[0].linkPreview.description, /OpenMoji.*CC BY-SA 4\.0/);
   assert.equal(sent[0].linkPreview.jpegThumbnail.readUInt16BE(0), 0xffd8);
   assert.equal(sent[0].image, undefined);
+});
+
+test('Rabisca aceita sinônimos cadastrados em português', async () => {
+  const sent = [];
+  const game = createRabisca({
+    deck: [{ answer: 'bola de futebol', aliases: ['bola'], theme: 'esportes' }],
+    render: async () => Buffer.from('imagem'),
+    schedule: () => 1, cancel: () => {},
+  });
+  const go = (text) => game.handle({ group: 'teste@g.us', player: '1@s.whatsapp.net', text,
+    send: async (payload) => sent.push(payload) });
+  await go('!rabisca esportes');
+  assert.match(sent[0].text, /Tema: Esportes/);
+  await go('bola');
+  assert.ok(sent.some(message => message.text?.includes('+10 pontos')));
+});
+
+test('baralho ampliado reúne três novas fontes e pelo menos 300 respostas distintas', () => {
+  const cards = [
+    ...require('../data/rabisca.json'),
+    ...require('../data/rabisca-openmoji.json'),
+    ...require('../data/rabisca-expansao.json'),
+  ];
+  const expansion = cards.filter(card => card.asset);
+  assert.deepEqual([...new Set(expansion.map(card => card.source))].sort(),
+    ['game-icons', 'openclipart', 'tabler']);
+  assert.equal(new Set(cards.map(card => card.answer)).size, 300);
+  assert.ok(expansion.every(card => card.png && card.asset && card.author));
 });

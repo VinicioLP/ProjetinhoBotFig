@@ -49,7 +49,7 @@ Responda a uma figurinha com `!salvar surtando`. Depois, mande `!usar surtando` 
 
 ## Rabisca
 
-Mande `!rabisca` em um grupo para jogar com todos os temas ou escolha `!rabisca animais`, `!rabisca comidas`, `!rabisca objetos` ou `!rabisca transportes`.
+Mande `!rabisca` em um grupo para misturar todos os desenhos. Para escolher um tema, use `!rabisca` seguido de animais, comidas, objetos, transportes, esportes, música, profissões, natureza, fantasia ou tecnologia.
 
 - Mande o palpite como mensagem normal ou use `!chute palavra`. O primeiro acerto vale 10 pontos. O bot mostra quem acertou e seu total antes de abrir o próximo desenho.
 - O desenho é enviado como prévia de link na conversa, sem foto em anexo. O link leva ao guia e aos créditos. Cada resposta só entra uma vez por partida, e o bot prioriza palavras e desenhos que o grupo viu há mais tempo.
@@ -61,6 +61,12 @@ Os traços vêm do [Google Quick, Draw! Dataset](https://github.com/googlecreati
 
 O arquivo `data/rabisca-openmoji.json` acrescenta 32 ilustrações em preto e branco do [OpenMoji](https://openmoji.org/), distribuídas sob [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). O bot centraliza e redimensiona as ilustrações para o cartão. Os cartões derivados dessas ilustrações mantêm a mesma licença. [Arquivos de origem](https://github.com/hfg-gmuend/openmoji/tree/5acb7f049c45c57a98449122d470de9f09bb6794/black/618x618).
 
+
+A expansão `data/rabisca-expansao.json` reúne 209 respostas novas e leva o jogo a 300 respostas distintas. Cada carta registra a imagem original, a autoria, a licença e, quando aplicável, sinônimos em português. As imagens foram rasterizadas e redimensionadas para os cartões. Os ícones de Game-icons.net também tiveram as cores invertidas para o fundo claro.
+
+- [Tabler Icons](https://github.com/tabler/tabler-icons), por Paweł Kuna e colaboradores, sob [MIT](data/LICENSE-TABLER.txt).
+- [Game-icons.net](https://game-icons.net/about.html), sob [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) ou CC0 quando indicado no arquivo. Os autores individuais aparecem nos cartões e na base.
+- [Openclipart](https://openclipart.org/faq), sob [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Os autores e páginas originais estão na base.
 
 ## Testes
 

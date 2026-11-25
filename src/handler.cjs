@@ -30,7 +30,7 @@ const help = [
   ]),
   '',
   '*Jogos de grupo*',
-  '!rabisca — Inicia o jogo de adivinhar desenhos. Temas: animais, comidas, objetos e transportes.',
+  '!rabisca — Inicia o jogo de adivinhar desenhos. Exemplos: !rabisca esportes, !rabisca música, !rabisca natureza ou !rabisca fantasia.',
   '!dica — Mostra uma dica do desenho atual.',
   '!pular — Troca de desenho.',
   '!placar — Mostra os pontos da partida.',

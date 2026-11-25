@@ -8,8 +8,18 @@ const themes = new Map([
   ['comidas', '🍴 Tema: Comidas'],
   ['objetos', '🧩 Tema: Objetos'],
   ['transportes', '🚗 Tema: Transportes'],
+  ['esportes', '⚽ Tema: Esportes'],
+  ['musica', '🎵 Tema: Música'],
+  ['profissoes', '🧰 Tema: Profissões e ferramentas'],
+  ['natureza', '🌿 Tema: Natureza'],
+  ['fantasia', '🐉 Tema: Fantasia'],
+  ['tecnologia', '💻 Tema: Tecnologia'],
 ]);
-const deckLocal = [...require('../data/rabisca.json'), ...require('../data/rabisca-openmoji.json')];
+const deckLocal = [
+  ...require('../data/rabisca.json'),
+  ...require('../data/rabisca-openmoji.json'),
+  ...require('../data/rabisca-expansao.json'),
+];
 const controls = new Set(['rabisca', 'dica', 'pular', 'placar', 'chute', 'fim']);
 const aliases = {
   cachorro: ['cão'],
@@ -18,6 +28,12 @@ const aliases = {
   'guarda-chuva': ['sombrinha'],
   relógio: ['relógio de parede'],
 };
+
+function drawingCredit(entry) {
+  if (entry.author) return `Ilustração por ${entry.author} • ${entry.license}`;
+  if (entry.source === 'openmoji') return 'Ilustração por OpenMoji • CC BY-SA 4.0';
+  return 'Desenho do Google Quick, Draw! • CC BY 4.0';
+}
 
 function normalizeGuess(text) {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -131,9 +147,7 @@ function createRabisca({
       const linkPreview = {
         'matched-text': creditsUrl,
         title: 'Qual é o desenho?',
-        description: entry.source === 'openmoji'
-          ? 'Ilustração por OpenMoji • CC BY-SA 4.0'
-          : 'Desenho do Google Quick, Draw! • CC BY 4.0',
+        description: drawingCredit(entry),
         jpegThumbnail: thumbnail,
       };
       if (uploadPreview) {
@@ -198,14 +212,15 @@ function createRabisca({
     }
 
     if (control === 'rabisca') {
+      const theme = normalizeGuess(arg ?? 'geral');
       if (game) await reply('Já tem uma partida neste grupo. Mande seu palpite!');
-      else if (arg && arg !== 'geral' && !themes.has(arg)) {
+      else if (theme !== 'geral' && !themes.has(theme)) {
         await reply(`Tema inválido. Use !rabisca para misturar tudo ou escolha: ${[...themes.keys()].join(', ')}.`);
       }
       else {
         const history = histories.get(group) ?? { count: 0, answers: new Map(), drawings: new Map() };
         histories.set(group, history);
-        const cards = makeDeck(deck.filter((entry) => !arg || arg === 'geral' || entry.theme === arg), history, random);
+        const cards = makeDeck(deck.filter((entry) => theme === 'geral' || entry.theme === theme), history, random);
         const state = { owner: player, number: 0, deck: cards, hints: 3, skips: 3, scores: new Map(), round: null, history };
         games.set(group, state);
         await nextRound(group, state, send);
@@ -249,7 +264,7 @@ function createRabisca({
       return true;
     }
     const guess = normalizeGuess(control === 'chute' ? (arg ?? '') : trimmed);
-    const correct = [answer, ...(aliases[answer] ?? [])].some((value) => normalizeGuess(value) === guess);
+    const correct = [answer, ...(aliases[answer] ?? []), ...(round.entry.aliases ?? [])].some((value) => normalizeGuess(value) === guess);
     if (control !== 'pular' && !correct) return control === 'chute';
 
     closeRound(game);
