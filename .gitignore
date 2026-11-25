@@ -1,0 +1,6 @@
+node_modules/
+.puppeteer-cache/
+.wwebjs_auth/
+.wwebjs_cache/
+.media-tmp/
+.plogme_auth/
