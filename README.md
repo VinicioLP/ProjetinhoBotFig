@@ -49,7 +49,7 @@ Responda a uma figurinha com `!salvar surtando`. Depois, mande `!usar surtando` 
 
 ## Rabisca
 
-Mande `!rabisca` em um grupo para jogar com todos os temas ou escolha `!rabisca animais`, `!rabisca comidas` `!rabisca objetos` ou `!rabisca transportes`.
+Mande `!rabisca` em um grupo para jogar com todos os temas ou escolha `!rabisca animais`, `!rabisca comidas`, `!rabisca objetos` ou `!rabisca transportes`.
 
 - Mande o palpite como mensagem normal ou use `!chute palavra`. O primeiro acerto vale 10 pontos. O bot mostra quem acertou e seu total antes de abrir o próximo desenho.
 - O desenho é enviado como prévia de link na conversa, sem foto em anexo. O link leva ao guia e aos créditos. Cada resposta só entra uma vez por partida, e o bot prioriza palavras e desenhos que o grupo viu há mais tempo.
