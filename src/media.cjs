@@ -2,6 +2,7 @@ const { spawn } = require('node:child_process');
 const { existsSync } = require('node:fs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const { Image } = require('node-webpmux');
 
 const bundledFfmpeg = require('ffmpeg-static');
 const binary = process.env.FFMPEG_PATH?.trim()
@@ -44,6 +45,23 @@ function ffmpeg(args, input) {
   });
 }
 
+const stickerInfo = Buffer.from(JSON.stringify({
+  'sticker-pack-id': 'orvex.projetinhobotfig',
+  'sticker-pack-name': 'Figurinhas',
+  'sticker-pack-publisher': 'feito por Orvex',
+  emojis: [],
+}));
+
+async function addStickerInfo(data) {
+  // Campo privado do EXIF usado para os dados do pacote de figurinhas.
+  const header = Buffer.from('49492a00080000000100415707000000000016000000', 'hex');
+  header.writeUInt32LE(stickerInfo.length, 14);
+  const image = new Image();
+  await image.load(data);
+  image.exif = Buffer.concat([header, stickerInfo]);
+  return image.save(null);
+}
+
 async function makeSticker(input, animated, framing, duration) {
   const limit = animated ? 500_000 : 100_000;
   const profiles = animated ? [[12, 68], [9, 48], [6, 30]] : [[0, 78], [0, 50], [0, 25]];
@@ -56,8 +74,10 @@ async function makeSticker(input, animated, framing, duration) {
       '-compression_level', '4', '-loop', '0', '-f', 'webp', 'pipe:1',
     ]);
     const actualLimit = data.includes('ANMF') ? limit : 100_000;
-    if (data.length && data.length <= actualLimit) {
-      return { data, mimetype: 'image/webp', filename: 'figurinha.webp' };
+    if (!data.length || data.length > actualLimit) continue;
+    const tagged = await addStickerInfo(data);
+    if (tagged.length <= actualLimit) {
+      return { data: tagged, mimetype: 'image/webp', filename: 'figurinha.webp' };
     }
   }
   throw new MediaError('A figurinha ficou grande demais. Tente um vídeo mais curto ou uma imagem mais simples.');

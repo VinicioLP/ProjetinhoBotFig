@@ -1,6 +1,16 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+function stickerPublisher(webp) {
+  for (let offset = 12; offset + 8 <= webp.length;) {
+    const size = webp.readUInt32LE(offset + 4);
+    if (webp.toString('ascii', offset, offset + 4) === 'EXIF') {
+      return JSON.parse(webp.toString('utf8', offset + 30, offset + 8 + size))['sticker-pack-publisher'];
+    }
+    offset += 8 + size + (size % 2);
+  }
+}
+
 test('identifica comandos completos e ignora conversa normal', async () => {
   const { commandFrom } = require('../src/handler.cjs');
   assert.equal(commandFrom(' !FIG '), 'fig');
@@ -22,6 +32,7 @@ test('gera figurinha WebP, áudio Opus e vídeo com áudio de um vídeo real', a
   const [sticker, audio] = await convertMedia(input, 'figsom');
   assert.equal(sticker.data.toString('ascii', 8, 12), 'WEBP');
   assert.ok(sticker.data.includes('ANMF'));
+  assert.equal(stickerPublisher(sticker.data), 'feito por Orvex');
   assert.ok(sticker.data.length <= 500_000);
   assert.ok(audio.data.includes('OpusHead'));
   const { generateWAMessageContent, proto } = await import('plogme');
@@ -60,6 +71,7 @@ test('gera figurinha estática de uma foto e só figurinha de vídeo mudo', asyn
   const [photo] = await convertMedia({ mimetype: 'image/png', data: png.toString('base64') }, 'fig');
   assert.equal(photo.data.toString('ascii', 8, 12), 'WEBP');
   assert.ok(photo.data.length <= 100_000);
+  assert.equal(stickerPublisher(photo.data), 'feito por Orvex');
   await ffmpeg(['-i', 'pipe:0', '-f', 'null', '-'], photo.data);
 
   const video = await ffmpeg([
