@@ -1,5 +1,7 @@
 const { ffmpeg } = require('./media.cjs');
 
+const creditsUrl = 'https://github.com/VinicioLP/ProjetinhoBotFig#rabisca';
+
 const themes = ['animais', 'comidas', 'objetos'];
 const controls = new Set(['rabisca', 'dica', 'pular', 'placar', 'chute']);
 const aliases = {
@@ -15,13 +17,14 @@ function normalizeGuess(text) {
 }
 
 async function renderDrawing({ drawing }) {
-  const size = 512;
-  const pixels = Buffer.alloc(size * size * 3, 255);
+  const canvasWidth = 640;
+  const canvasHeight = 360;
+  const pixels = Buffer.alloc(canvasWidth * canvasHeight * 3, 255);
   function dot(x, y) {
     for (let dy = -3; dy <= 3; dy++) {
       for (let dx = -3; dx <= 3; dx++) {
         if (dx * dx + dy * dy > 9) continue;
-        const offset = ((y + dy) * size + x + dx) * 3;
+        const offset = ((y + dy) * canvasWidth + x + dx) * 3;
         pixels.fill(22, offset, offset + 3);
       }
     }
@@ -32,10 +35,10 @@ async function renderDrawing({ drawing }) {
   const top = Math.min(...points.map(([, y]) => y));
   const width = Math.max(...points.map(([x]) => x)) - left;
   const height = Math.max(...points.map(([, y]) => y)) - top;
-  const scale = 424 / Math.max(width, height, 1);
+  const scale = 294 / Math.max(width, height, 1);
   function position(x, y) {
-    return [(size - width * scale) / 2 + (x - left) * scale,
-      (size - height * scale) / 2 + (y - top) * scale];
+    return [(canvasWidth - width * scale) / 2 + (x - left) * scale,
+      (canvasHeight - height * scale) / 2 + (y - top) * scale];
   }
 
   for (const [xs, ys] of drawing) {
@@ -50,22 +53,40 @@ async function renderDrawing({ drawing }) {
   }
 
   return ffmpeg([
-    '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', '512x512', '-i', 'pipe:0',
+    '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', `${canvasWidth}x${canvasHeight}`, '-i', 'pipe:0',
     '-frames:v', '1', '-c:v', 'mjpeg', '-q:v', '3', '-f', 'image2pipe', 'pipe:1',
   ], pixels);
 }
 
+function makeDeck(entries, history, random) {
+  for (let i = entries.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [entries[i], entries[j]] = [entries[j], entries[i]];
+  }
+  entries.sort((a, b) => (history.answers.get(a.answer) ?? 0) - (history.answers.get(b.answer) ?? 0)
+    || (history.drawings.get(a.id ?? a.answer) ?? 0) - (history.drawings.get(b.id ?? b.answer) ?? 0));
+  const answers = new Set();
+  return entries.filter((entry) => {
+    if (answers.has(entry.answer)) return false;
+    answers.add(entry.answer);
+    return true;
+  });
+}
+
 function createRabisca({
-  deck = require('../data/rabisca.json'), random = Math.random, render = renderDrawing,
+  deck = require('../data/rabisca.json'), random = Math.random,
+  render = renderDrawing,
   schedule = setTimeout, cancel = clearTimeout, onError = console.error,
 } = {}) {
   const games = new Map();
   const lastScores = new Map();
+  const histories = new Map();
 
   function scorePayload(game, heading) {
     const ranking = [...game.scores].sort((a, b) => b[1] - a[1]);
+    const total = ranking.reduce((sum, [, points]) => sum + points, 0);
     return {
-      text: [heading, '', ranking.length ? '*Placar*' : 'Ninguém pontuou nesta partida.',
+      text: [heading, `Total do grupo: *${total} pontos*`, '', ranking.length ? '*Placar*' : 'Ninguém pontuou nesta partida.',
         ...ranking.map(([player, score], i) => `${i + 1}. @${player.split('@')[0]} • ${score} pontos`),
       ].join('\n'),
       mentions: ranking.map(([player]) => player),
@@ -86,18 +107,28 @@ function createRabisca({
   }
 
   async function nextRound(group, game, send) {
-    const nextIndex = game.deck.findIndex((entry) => entry.answer !== game.previous);
-    const [entry] = game.deck.splice(Math.max(0, nextIndex), 1);
+    const entry = game.deck.shift();
     if (!entry) return finish(group, game, send, 'Fim de partida. Vocês chegaram ao fim do baralho!');
-    game.previous = entry.answer;
     try {
-      const image = await render(entry);
+      const thumbnail = await render(entry);
       if (games.get(group) !== game) return;
       await send({
-        image,
-        caption: `*Rabisca • desenho ${++game.number}*\nTema: ${entry.theme}. Vocês têm 60 segundos.\nPalpitem com uma mensagem ou usem !dica e !pular.\nDesenho: Quick, Draw! • https://github.com/VinicioLP/ProjetinhoBotFig#rabisca`,
+        text: `*Rabisca • desenho ${++game.number}*\nTema: ${entry.theme}. Vocês têm 60 segundos.\nMande seu palpite ou use !dica e !pular.`,
+        externalAdReply: {
+          title: 'Qual é o desenho?',
+          body: 'Desenho do Google Quick, Draw! • CC BY 4.0',
+          thumbnail,
+          sourceUrl: creditsUrl,
+          mediaType: 1,
+          renderLargerThumbnail: true,
+          showAdAttribution: false,
+        },
+        linkPreview: null,
       });
       if (games.get(group) !== game) return;
+      const count = ++game.history.count;
+      game.history.answers.set(entry.answer, count);
+      game.history.drawings.set(entry.id ?? entry.answer, count);
       const round = { entry, usedHint: false, deadline: Date.now() + 60_000 };
       game.round = round;
       round.timer = schedule(async () => {
@@ -137,12 +168,10 @@ function createRabisca({
       if (game) await reply('Já tem uma partida neste grupo. Mande seu palpite!');
       else if (arg && arg !== 'geral' && !themes.includes(arg)) await reply('Use !rabisca, !rabisca animais, !rabisca comidas ou !rabisca objetos.');
       else {
-        const cards = deck.filter((entry) => !arg || arg === 'geral' || entry.theme === arg);
-        for (let i = cards.length - 1; i > 0; i--) {
-          const j = Math.floor(random() * (i + 1));
-          [cards[i], cards[j]] = [cards[j], cards[i]];
-        }
-        const state = { owner: player, number: 0, deck: cards, hints: 3, skips: 3, scores: new Map(), round: null };
+        const history = histories.get(group) ?? { count: 0, answers: new Map(), drawings: new Map() };
+        histories.set(group, history);
+        const cards = makeDeck(deck.filter((entry) => !arg || arg === 'geral' || entry.theme === arg), history, random);
+        const state = { owner: player, number: 0, deck: cards, hints: 3, skips: 3, scores: new Map(), round: null, history };
         games.set(group, state);
         await nextRound(group, state, send);
       }
@@ -192,11 +221,12 @@ function createRabisca({
     try {
       if (control === 'pular') {
         game.skips--;
-        await reply(`Desenho pulado. Era *${answer}*. Restam ${game.skips} pulos.`);
+        await send(scorePayload(game, `Desenho pulado. Era *${answer}*. Restam ${game.skips} pulos.`));
       } else {
-        game.scores.set(player, (game.scores.get(player) ?? 0) + 10);
+        const total = (game.scores.get(player) ?? 0) + 10;
+        game.scores.set(player, total);
         await send({
-          text: `@${player.split('@')[0]} acertou *${answer}*! +10 pontos.`,
+          text: `@${player.split('@')[0]} acertou *${answer}*! +10 pontos. Total: *${total} pontos*.`,
           mentions: [player],
         });
       }

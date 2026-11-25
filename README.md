@@ -51,12 +51,13 @@ Responda a uma figurinha com `!salvar surtando`. Depois, mande `!usar surtando` 
 
 Mande `!rabisca` em um grupo para jogar com todos os temas ou escolha `!rabisca animais`, `!rabisca comidas` ou `!rabisca objetos`.
 
-- Mande o palpite como mensagem normal ou use `!chute palavra`. O primeiro acerto vale 10 pontos e abre o próximo desenho.
+- Mande o palpite como mensagem normal ou use `!chute palavra`. O primeiro acerto vale 10 pontos. O bot mostra quem acertou e seu total antes de abrir o próximo desenho.
+- O desenho aparece numa prévia grande na conversa. Cada resposta só entra uma vez por partida, e o bot prioriza palavras e desenhos que o grupo viu há mais tempo.
 - Cada desenho tem 60 segundos. Se ninguém acertar a tempo, a partida termina e o bot revela a resposta e o placar.
 - O grupo tem três usos de `!dica` e três de `!pular` por partida. Cada desenho só pode receber uma dica, e pular já abre outro desenho.
 - `!placar` mostra a pontuação atual ou a da última partida do grupo. Quem iniciou pode encerrar com `!rabisca fim`. O placar fica na memória até reiniciar o bot.
 
-Os traços vêm do [Google Quick, Draw! Dataset](https://github.com/googlecreativelab/quickdraw-dataset), com desenhos contribuídos pelos jogadores e disponibilizados por Google, Inc. sob [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). O arquivo `data/rabisca.json` contém um recorte de 192 desenhos de 24 categorias. Os rótulos foram traduzidos para português e os traços são centralizados e renderizados como imagem pelo bot.
+Os traços vêm do [Google Quick, Draw! Dataset](https://github.com/googlecreativelab/quickdraw-dataset), com desenhos contribuídos pelos jogadores e disponibilizados por Google, Inc. sob [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). O arquivo `data/rabisca.json` contém um recorte de 332 desenhos de 59 categorias. Os rótulos foram traduzidos para português e os traços são centralizados e renderizados como imagem pelo bot.
 
 
 ## Testes
