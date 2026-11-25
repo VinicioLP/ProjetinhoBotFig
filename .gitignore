@@ -4,3 +4,4 @@ node_modules/
 .wwebjs_cache/
 .media-tmp/
 .plogme_auth/
+.sticker-collection/

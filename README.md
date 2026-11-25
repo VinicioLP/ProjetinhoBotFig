@@ -17,17 +17,35 @@ Mantenha o terminal aberto. Para parar, use **Ctrl+C**. Se precisar trocar de co
 
 ## Usar
 
-| Comando | Resultado |
-| --- | --- |
-| `!help` | Lista de comandos e instruções de uso |
-| `!fig` em uma foto | Figurinha estática |
-| `!fig` em um GIF ou vídeo | Figurinha animada sem áudio |
-| `!figquadrada` em foto, GIF ou vídeo | Figurinha sem áudio com recorte central de 512 × 512 px |
-| `!figsom` em um vídeo com áudio | Envio experimental de figurinha sonora |
-| `!figsomquadrada` em um vídeo com áudio | Figurinha sonora com recorte central de 512 × 512 px, sem bordas |
-| `!clip` em um vídeo | Vídeo quadrado em MP4 com o áudio original, quando houver |
+Mande `!help` para ver os comandos por categoria. Coloque o comando na legenda ou responda à mídia com ele.
 
-Coloque o comando na legenda ou responda à mídia com ele. Para testar de ponta a ponta, envie um vídeo com áudio e a legenda `!figsom` de outra conta, espere a resposta e toque no ícone de som da figurinha no celular. O bot aceita até 16 MB. !figsom e !figsomquadrada usam os primeiros 10 segundos de vídeo e áudio. !fig, !figquadrada e !clip usam até 6 segundos.
+### Criar figurinhas
+
+| Comando | Como usar |
+| --- | --- |
+| `!fig` | Converte foto, GIF ou vídeo em figurinha sem som. |
+| `!figquadrada` | Recorta o centro e preenche o quadrado de 512 × 512 px. |
+| `!figtexto eu só ia dar uma olhada` | Escreve uma frase de até 140 caracteres em uma foto ou vídeo. |
+| `!figzoom` | Faz uma foto virar uma animação com zoom. |
+| `!figloop` | Faz os primeiros três segundos de um vídeo ou GIF irem e voltarem. |
+| `!figdupla` | Responda à primeira foto com o comando e depois à segunda foto com o mesmo comando. |
+
+### Som e vídeo
+
+| Comando | Como usar |
+| --- | --- |
+| `!figsom` | Converte um vídeo com áudio em figurinha sonora de até 10 segundos. |
+| `!figsom 00:12 00:20` | Usa o trecho de 12 a 20 segundos. O trecho pode ter até 10 segundos. |
+| `!figsomquadrada` | Faz uma figurinha sonora com recorte central. Também aceita início e fim. |
+| `!figsomvoz` | Responda à figurinha, foto ou vídeo e depois à mensagem de voz com o mesmo comando. |
+| `!clip` | Cria um MP4 quadrado de até seis segundos com o áudio original. |
+
+Nos comandos de duas etapas, envie a segunda mídia em até cinco minutos, na mesma conversa. Cada arquivo pode ter até 16 MB. Se o FFmpeg não encontrar uma fonte para `!figtexto`, defina `FIG_FONT_PATH` para o caminho de uma fonte TTF instalada.
+
+### Coleção pessoal
+
+Responda a uma figurinha com `!salvar surtando`. Depois, mande `!usar surtando` na mesma conversa. Cada pessoa pode guardar até 50 nomes por conversa. Usar o mesmo nome substitui a figurinha anterior. O bot guarda a coleção em `.sticker-collection`, que fica fora do Git.
+
 
 ## Testes
 

@@ -1,5 +1,6 @@
 const path = require('node:path');
 const qr = require('qrcode-terminal');
+const { createCollection } = require('./collection.cjs');
 const { messageCommand, handleMessage } = require('./handler.cjs');
 const { convertMedia, MediaError } = require('./media.cjs');
 
@@ -12,6 +13,8 @@ async function main() {
     normalizeMessageContent, downloadContentFromMessage,
   } = await import('plogme');
   const { state, saveCreds } = await useMultiFileAuthState(authPath);
+  const collection = createCollection();
+  const pending = new Map();
   let socket;
   let retryTimer;
   let stopped = false;
@@ -81,7 +84,7 @@ async function main() {
 
         busy = true;
         try {
-          await handleMessage(raw, { normalize: normalizeMessageContent, download, convert: convertMedia, send });
+          await handleMessage(raw, { normalize: normalizeMessageContent, download, convert: convertMedia, send, collection, pending });
         } catch (error) {
           if (!(error instanceof MediaError)) console.error('Falha no comando:', error.message);
           await sendText(error instanceof MediaError ? error.message
