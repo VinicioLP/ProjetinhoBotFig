@@ -14,8 +14,9 @@ test('primeiro acerto ganha 10, avança e a rodada sem acerto encerra a partida'
   const go = (text, player = '1@s.whatsapp.net') =>
     game.handle({ group: 'teste@g.us', player, text, send: async payload => sent.push(payload) });
   await go('!rabisca');
-  assert.match(sent[0].caption, /Rabisca/);
-  assert.deepEqual(sent[0].image, Buffer.from('imagem'));
+  assert.match(sent[0].text, /Rabisca/);
+  assert.deepEqual(sent[0].linkPreview.jpegThumbnail, Buffer.from('imagem'));
+  assert.equal(sent[0].image, undefined);
 
 
   await Promise.all([go('maca'), go('maçã', '2@s.whatsapp.net')]);
@@ -89,10 +90,21 @@ test('evita repetir a resposta na partida e prioriza palavras ainda não vistas 
   assert.match(sent.at(-1).text, /fim do baralho/);
 });
 
-test('plogme codifica o desenho como imagem comum com legenda', async () => {
-  const { generateWAMessageContent } = await import('plogme');
+test('plogme codifica o desenho como prévia de link sem anexo de imagem', async () => {
+  const { generateWAMessageContent, prepareWAMessageMedia } = await import('plogme');
   const deck = require('../data/rabisca.json').slice(0, 1);
-  const game = createRabisca({ deck, schedule: () => 1, cancel: () => {} });
+  const game = createRabisca({
+    deck, schedule: () => 1, cancel: () => {},
+    uploadPreview: async (thumbnail) => {
+      const { imageMessage } = await prepareWAMessageMedia({
+        image: thumbnail, jpegThumbnail: thumbnail, width: 640, height: 360,
+      }, {
+        upload: async () => ({ mediaUrl: 'https://example.invalid/preview', directPath: '/preview' }),
+        mediaTypeOverride: 'thumbnail-link',
+      });
+      return imageMessage;
+    },
+  });
   let encoded;
   await game.handle({
     group: 'teste@g.us', player: '1@s.whatsapp.net', text: '!rabisca',
@@ -102,9 +114,15 @@ test('plogme codifica o desenho como imagem comum com legenda', async () => {
       });
     },
   });
-  assert.equal(encoded.imageMessage.mimetype, 'image/jpeg');
-  assert.match(encoded.imageMessage.caption, /Rabisca/);
-  assert.equal(encoded.extendedTextMessage, null);
+  const message = encoded.extendedTextMessage;
+  assert.equal(encoded.imageMessage, null);
+  assert.match(message.text, /Rabisca/);
+  assert.match(message.matchedText, /^https:\/\//);
+  assert.equal(message.title, 'Qual é o desenho?');
+  assert.equal(Buffer.from(message.jpegThumbnail).readUInt16BE(0), 0xffd8);
+  assert.equal(message.thumbnailDirectPath, '/preview');
+  assert.equal(message.thumbnailWidth, 640);
+  assert.equal(message.contextInfo?.externalAdReply, undefined);
 });
 
 test('!fim encerra a partida para quem iniciou e publica o placar', async () => {

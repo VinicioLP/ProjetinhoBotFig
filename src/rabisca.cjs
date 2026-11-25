@@ -1,5 +1,6 @@
 const { ffmpeg } = require('./media.cjs');
 
+const previewSize = { width: 640, height: 360 };
 const creditsUrl = 'https://github.com/VinicioLP/ProjetinhoBotFig#rabisca';
 
 const themes = ['animais', 'comidas', 'objetos'];
@@ -17,8 +18,7 @@ function normalizeGuess(text) {
 }
 
 async function renderDrawing({ drawing }) {
-  const canvasWidth = 512;
-  const canvasHeight = 512;
+  const { width: canvasWidth, height: canvasHeight } = previewSize;
   const pixels = Buffer.alloc(canvasWidth * canvasHeight * 3, 255);
   function dot(x, y) {
     for (let dy = -3; dy <= 3; dy++) {
@@ -35,7 +35,7 @@ async function renderDrawing({ drawing }) {
   const top = Math.min(...points.map(([, y]) => y));
   const width = Math.max(...points.map(([x]) => x)) - left;
   const height = Math.max(...points.map(([, y]) => y)) - top;
-  const scale = 424 / Math.max(width, height, 1);
+  const scale = 294 / Math.max(width, height, 1);
   function position(x, y) {
     return [(canvasWidth - width * scale) / 2 + (x - left) * scale,
       (canvasHeight - height * scale) / 2 + (y - top) * scale];
@@ -75,7 +75,7 @@ function makeDeck(entries, history, random) {
 
 function createRabisca({
   deck = require('../data/rabisca.json'), random = Math.random,
-  render = renderDrawing,
+  render = renderDrawing, uploadPreview,
   schedule = setTimeout, cancel = clearTimeout, onError = console.error,
 } = {}) {
   const games = new Map();
@@ -110,12 +110,25 @@ function createRabisca({
     const entry = game.deck.shift();
     if (!entry) return finish(group, game, send, 'Fim de partida. Vocês chegaram ao fim do baralho!');
     try {
-      const image = await render(entry);
+      const thumbnail = await render(entry);
+      if (games.get(group) !== game) return;
+      const linkPreview = {
+        'matched-text': creditsUrl,
+        title: 'Qual é o desenho?',
+        description: 'Rabisca • Google Quick, Draw! • CC BY 4.0',
+        jpegThumbnail: thumbnail,
+      };
+      if (uploadPreview) {
+        try {
+          linkPreview.highQualityThumbnail = await uploadPreview(thumbnail);
+        } catch (error) {
+          onError(error);
+        }
+      }
       if (games.get(group) !== game) return;
       await send({
-        image,
-        mimetype: 'image/jpeg',
-        caption: `*Rabisca • desenho ${++game.number}*\nTema: ${entry.theme}. Vocês têm 60 segundos.\nMande seu palpite ou use !dica e !pular.\nDesenho: Quick, Draw! • ${creditsUrl}`,
+        text: `*Rabisca • desenho ${++game.number}*\nTema: ${entry.theme}. Vocês têm 60 segundos.\nMande seu palpite ou use !dica e !pular.\n${creditsUrl}`,
+        linkPreview,
       });
       if (games.get(group) !== game) return;
       const count = ++game.history.count;
@@ -240,4 +253,4 @@ function createRabisca({
   };
 }
 
-module.exports = { createRabisca, renderDrawing };
+module.exports = { createRabisca, renderDrawing, previewSize };

@@ -1,7 +1,7 @@
 const path = require('node:path');
 const qr = require('qrcode-terminal');
 const { createCollection } = require('./collection.cjs');
-const { createRabisca } = require('./rabisca.cjs');
+const { createRabisca, previewSize } = require('./rabisca.cjs');
 const { messageCommand, handleMessage } = require('./handler.cjs');
 const { convertMedia, MediaError } = require('./media.cjs');
 
@@ -11,13 +11,27 @@ const maxBytes = 16 * 1024 * 1024;
 async function main() {
   const {
     makeWASocket, DisconnectReason, useMultiFileAuthState, DEFAULT_CONNECTION_CONFIG,
-    normalizeMessageContent, downloadContentFromMessage,
+    normalizeMessageContent, downloadContentFromMessage, prepareWAMessageMedia,
   } = await import('plogme');
   const { state, saveCreds } = await useMultiFileAuthState(authPath);
   const collection = createCollection();
   const pending = new Map();
-  const rabisca = createRabisca({ onError: (error) => console.error('Rabisca:', error.message) });
   let socket;
+  const rabisca = createRabisca({
+    onError: (error) => console.error('Rabisca:', error.message),
+    uploadPreview: async (thumbnail) => {
+      const { imageMessage } = await prepareWAMessageMedia({
+        image: thumbnail,
+        jpegThumbnail: thumbnail,
+        ...previewSize,
+      }, {
+        upload: socket.waUploadToServer,
+        mediaTypeOverride: 'thumbnail-link',
+        mediaUploadTimeoutMs: 8_000,
+      });
+      return imageMessage;
+    },
+  });
   let retryTimer;
   let stopped = false;
   let busy = false;
