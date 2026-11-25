@@ -7,7 +7,6 @@ const bundledFfmpeg = require('ffmpeg-static');
 const binary = process.env.FFMPEG_PATH?.trim()
   || (bundledFfmpeg && existsSync(bundledFfmpeg) ? bundledFfmpeg : 'ffmpeg');
 const tempRoot = path.join(__dirname, '..', '.media-tmp');
-const signature = path.join(__dirname, '..', 'assets', 'orvex.png');
 const seconds = '6';
 const soundStickerSeconds = '10';
 const square = 'scale=512:512:force_original_aspect_ratio=decrease:flags=lanczos';
@@ -51,11 +50,8 @@ async function makeSticker(input, animated, framing, duration) {
   for (const [fps, quality] of profiles) {
     const frames = animated ? ['-t', duration] : ['-frames:v', '1'];
     const filter = animated ? `fps=${fps},${framing}` : framing;
-    const outputFormat = framing === croppedStickerFilter ? 'yuv420p' : 'yuva420p';
-    const overlay = `[0:v:0]${filter}[base];[base][1:v:0]overlay=(W-w)/2:H-h-12:format=auto,format=${outputFormat}[sticker]`;
     const data = await ffmpeg([
-      '-i', input, '-i', signature, '-filter_complex', overlay,
-      '-map', '[sticker]', '-an', ...frames,
+      '-i', input, '-map', '0:v:0', '-an', ...frames, '-vf', filter,
       '-c:v', animated ? 'libwebp_anim' : 'libwebp', '-quality', String(quality),
       '-compression_level', '4', '-loop', '0', '-f', 'webp', 'pipe:1',
     ]);
