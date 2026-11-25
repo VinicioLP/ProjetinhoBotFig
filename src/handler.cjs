@@ -28,6 +28,12 @@ const help = [
     '', `*${title}*`,
     ...entries.map(([command, example, detail]) => `!${command}${example ? ' ' + example : ''} — ${detail}`),
   ]),
+  '',
+  '*Jogos de grupo*',
+  '!rabisca — Inicia o jogo de adivinhar desenhos. Temas: animais, comidas e objetos.',
+  '!dica — Mostra uma dica do desenho atual.',
+  '!pular — Troca de desenho.',
+  '!placar — Mostra os pontos da partida.',
 ].join('\n');
 
 function parseCommand(body) {

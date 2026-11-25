@@ -1,6 +1,7 @@
 const path = require('node:path');
 const qr = require('qrcode-terminal');
 const { createCollection } = require('./collection.cjs');
+const { createRabisca } = require('./rabisca.cjs');
 const { messageCommand, handleMessage } = require('./handler.cjs');
 const { convertMedia, MediaError } = require('./media.cjs');
 
@@ -15,6 +16,7 @@ async function main() {
   const { state, saveCreds } = await useMultiFileAuthState(authPath);
   const collection = createCollection();
   const pending = new Map();
+  const rabisca = createRabisca({ onError: (error) => console.error('Rabisca:', error.message) });
   let socket;
   let retryTimer;
   let stopped = false;
@@ -70,9 +72,22 @@ async function main() {
     current.ev.on('messages.upsert', async ({ type, messages }) => {
       if (type !== 'notify' || current !== socket || stopped) return;
       for (const raw of messages) {
-        const { remoteJid, fromMe } = raw.key;
-        if (!remoteJid || fromMe || remoteJid === 'status@broadcast'
-          || !messageCommand(normalizeMessageContent(raw.message))) continue;
+        const { remoteJid, fromMe, participant } = raw.key;
+        if (!remoteJid || fromMe || remoteJid === 'status@broadcast') continue;
+        const content = normalizeMessageContent(raw.message);
+        const text = content?.conversation ?? content?.extendedTextMessage?.text;
+        if (remoteJid.endsWith('@g.us') && text) {
+          const sendToGroup = (payload) => socket.sendMessage(remoteJid, payload);
+          try {
+            if (await rabisca.handle({ group: remoteJid, player: participant, text, send: sendToGroup })) continue;
+          } catch (error) {
+            console.error('Rabisca:', error.message);
+            await sendToGroup({ text: 'Não consegui continuar o Rabisca. Tente iniciar novamente.' })
+              .catch(() => {});
+            continue;
+          }
+        }
+        if (!messageCommand(content)) continue;
 
         const send = (payload) => current.sendMessage(remoteJid, payload, { quoted: raw });
         const sendText = (text) => send({ text })
@@ -100,6 +115,7 @@ async function main() {
     if (stopped) return;
     stopped = true;
     clearTimeout(retryTimer);
+    rabisca.stop();
     socket?.end();
     await pendingSave;
     process.exit(0);

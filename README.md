@@ -47,6 +47,18 @@ Nos comandos de duas etapas, envie a segunda mídia em até cinco minutos, na me
 Responda a uma figurinha com `!salvar surtando`. Depois, mande `!usar surtando` na mesma conversa. Cada pessoa pode guardar até 50 nomes por conversa. Usar o mesmo nome substitui a figurinha anterior. O bot guarda a coleção em `.sticker-collection`, que fica fora do Git.
 
 
+## Rabisca
+
+Mande `!rabisca` em um grupo para jogar com todos os temas ou escolha `!rabisca animais`, `!rabisca comidas` ou `!rabisca objetos`.
+
+- Mande o palpite como mensagem normal ou use `!chute palavra`. O primeiro acerto vale 10 pontos e abre o próximo desenho.
+- Cada desenho tem 60 segundos. Se ninguém acertar a tempo, a partida termina e o bot revela a resposta e o placar.
+- O grupo tem três usos de `!dica` e três de `!pular` por partida. Cada desenho só pode receber uma dica, e pular já abre outro desenho.
+- `!placar` mostra a pontuação atual ou a da última partida do grupo. Quem iniciou pode encerrar com `!rabisca fim`. O placar fica na memória até reiniciar o bot.
+
+Os traços vêm do [Google Quick, Draw! Dataset](https://github.com/googlecreativelab/quickdraw-dataset), com desenhos contribuídos pelos jogadores e disponibilizados por Google, Inc. sob [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). O arquivo `data/rabisca.json` contém um recorte de 192 desenhos de 24 categorias. Os rótulos foram traduzidos para português e os traços são centralizados e renderizados como imagem pelo bot.
+
+
 ## Testes
 
 ```powershell
