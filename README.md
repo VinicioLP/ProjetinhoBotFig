@@ -44,16 +44,16 @@ O celular executa o bot diretamente e pode ficar com a tela apagada. O GitHub gu
 2. Abra o Termux e execute:
 
    ```sh
-   pkg update
+   pkg update && pkg upgrade
    pkg install git nodejs-lts npm ffmpeg
    git clone https://github.com/VinicioLP/ProjetinhoBotFig.git
    cd ProjetinhoBotFig
    npm ci --ignore-scripts
    termux-wake-lock
-   FFMPEG_PATH="$(command -v ffmpeg)" npm start
+   npm start
    ```
 
-   O projeto fica na pasta privada do Termux. O comando usa o FFmpeg do Android e dispensa o binário que o npm normalmente baixa.
+   O projeto fica na pasta privada do Termux. O bot encontra o FFmpeg instalado pelo Termux. Se a conversão falhar por falta de FFmpeg, rode ffmpeg -version para conferir a instalação.
 
 3. No WhatsApp da conta do bot, abra **Aparelhos conectados → Conectar um aparelho** e escaneie o QR no Termux. Se for usar o WhatsApp no mesmo celular, exiba o QR temporariamente em outra tela que você controle. Aguarde **Bot online** e mande **!help** de outra conta.
 4. Nas configurações do Android, marque o Termux como **Sem restrições** em uso de bateria, se disponível. Mantenha o aparelho ligado e conectado à internet. Teste **!help** com a tela apagada. O Android ainda pode encerrar o Termux em segundo plano, dependendo do aparelho.
@@ -68,7 +68,6 @@ cat > "$HOME/.termux/boot/start-bot" <<'EOF'
 #!/data/data/com.termux/files/usr/bin/sh
 termux-wake-lock
 cd "$HOME/ProjetinhoBotFig" || exit 1
-export FFMPEG_PATH="$(command -v ffmpeg)"
 exec node src/index.cjs >> "$HOME/projetinho-bot.log" 2>&1
 EOF
 chmod +x "$HOME/.termux/boot/start-bot"
@@ -85,7 +84,7 @@ cd ~/ProjetinhoBotFig
 git pull --ff-only
 npm ci --ignore-scripts
 termux-wake-lock
-FFMPEG_PATH="$(command -v ffmpeg)" npm start
+npm start
 ```
 
 A pasta `.plogme_auth` guarda as credenciais localmente e já está no `.gitignore`. Mantenha a pasta no celular para reutilizar a sessão.

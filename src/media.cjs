@@ -1,8 +1,11 @@
 const { spawn } = require('node:child_process');
+const { existsSync } = require('node:fs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
-const binary = process.env.FFMPEG_PATH || require('ffmpeg-static');
+const bundledFfmpeg = require('ffmpeg-static');
+const binary = process.env.FFMPEG_PATH?.trim()
+  || (bundledFfmpeg && existsSync(bundledFfmpeg) ? bundledFfmpeg : 'ffmpeg');
 const tempRoot = path.join(__dirname, '..', '.media-tmp');
 const seconds = '6';
 const soundStickerSeconds = '10';
@@ -26,7 +29,13 @@ function ffmpeg(args, input) {
     child.stdin.on('error', (error) => {
       if (!['EPIPE', 'EOF', 'ECONNRESET'].includes(error.code)) reject(error);
     });
-    child.on('error', reject);
+    child.on('error', (error) => {
+      if (error.code === 'ENOENT') {
+        reject(new MediaError('FFmpeg não encontrado. No Termux, instale com pkg install ffmpeg.'));
+        return;
+      }
+      reject(error);
+    });
     child.on('close', (code) => {
       if (code === 0) resolve(Buffer.concat(chunks));
       else reject(new Error(diagnostics.trim() || 'FFmpeg interrompido.'));

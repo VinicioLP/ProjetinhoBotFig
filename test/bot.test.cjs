@@ -96,3 +96,22 @@ test('figurinhas sonoras sincronizam a duração do áudio com a animação de a
     assert.equal(samples, BigInt(duration) * 48n, mode);
   }
 });
+
+test('usa o FFmpeg do PATH quando o pacote não oferece binário', async () => {
+  const { execFileSync } = require('node:child_process');
+  const path = require('node:path');
+  const bundled = process.env.FFMPEG_PATH || require('ffmpeg-static');
+  const env = { ...process.env };
+  delete env.FFMPEG_PATH;
+  if (bundled && path.isAbsolute(bundled)) {
+    env.PATH = path.dirname(bundled) + path.delimiter + env.PATH;
+  }
+  const output = execFileSync(process.execPath, ['-e', `
+    require('ffmpeg-static');
+    require.cache[require.resolve('ffmpeg-static')].exports = null;
+    require('./src/media.cjs').ffmpeg(['-version'])
+      .then(data => process.stdout.write(data))
+      .catch(error => { console.error(error.message); process.exitCode = 1; });
+  `], { env, cwd: path.join(__dirname, '..') });
+  assert.match(output.toString(), /ffmpeg version/);
+});
